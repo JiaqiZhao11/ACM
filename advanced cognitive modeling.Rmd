@@ -1,0 +1,332 @@
+---
+title: "advanced cognitive modeling"
+author: "jesper fischer ehmsen"
+date: "2023-02-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+```
+
+
+## R Markdown
+
+
+```{r}
+#get the function to simulate two agents playing the matching pennies experiment
+source("agents.R")
+
+#different parameter settings for the game and agents:
+#ntrials the number of times the agents play the game
+ntrials = 120
+#alpha1_l is the learning rate for the first agent (matcher) when losing
+alpha1_l = 0.66
+#alpha1_l is the learning rate for the first agent (matcher) when winning
+alpha1_w = 0.33
+#alpha2_l is the learning rate for the first agent (non-matcher) when losing
+alpha2_l = 0
+#alpha1_l is the learning rate for the first agent (non-matcher) when winning
+alpha2_w = 0
+#bias1 is the bias of the first participant to answer 1. That is if it is 1 then agent 1 will choose 1 on the first trial, if 0.5 he picks at random
+bias1 = 0.5
+#bias 2 is what bias1 is for agent2
+bias2 = 0.7
+
+#the incentive of the first agent do you play after your belief (0) or do you choose the oppisite of your belief (1)
+incentive1 = 0
+#the incentive of the second agent do you play after your belief (0) or do you choose the oppisite of your belief (1)
+incentive2 = 0
+
+
+#different agents:
+#random bias:
+#to initialize a random bias agent the learning rates for that agent just have to set to 0 and the bias is will then determine the bias of the agent:
+
+#win stay lose shift (WSLS):
+#to initialize a (WSLS) agent the two learning rates for the agent has to be set to 1.
+
+#rescorla wagner(RW) learner with constant learning rate
+#to initialize this RW agent the two learning rates for the agent just have to be equal
+
+#rescorla wagner(RW) learner with different learning rate for wins and loses
+#to initialize a RW agent the two learning rates for the agent just have to be different:
+```
+
+
+```{r, include = F}
+#make the agents play once (not included)
+df = rw_vs_rw(ntrials = ntrials,
+         alpha1_l = alpha1_l,
+         alpha1_w = alpha1_w,
+         alpha2_l = alpha2_l,
+         alpha2_w = alpha2_w,
+         bias1 = bias1,
+         bias2 = bias2,
+         incentive1 = incentive1,  # 0 doesn't care about ,  1 does the oppisite
+         incentive2 = incentive2
+         )
+
+df = data.frame(df)
+
+plot_choices(df)
+
+df1 = plot_cumwin(df)
+
+df1$plot
+
+```
+
+
+
+```{r, stategy 1}
+#Plot1 (vs random bias)
+#different parameter settings for the game and agents:
+#ntrials the number of times the agents play the game
+ntrials = 120
+#alpha1_l is the learning rate for the first agent (matcher) when losing
+alpha1_l = 0.66
+#alpha1_l is the learning rate for the first agent (matcher) when winning
+alpha1_w = 0.33
+#alpha2_l is the learning rate for the first agent (non-matcher) when losing
+alpha2_l = 0
+#alpha1_l is the learning rate for the first agent (non-matcher) when winning
+alpha2_w = 0
+#bias1 is the bias of the first participant to answer 1. That is if it is 1 then agent 1 will choose 1 on the first trial, if 0.5 he picks at random
+bias1 = 0.5
+#bias 2 is what bias1 is for agent2
+bias2 = 0.7
+
+#the incentive of the first agent do you play after your belief (0) or do you choose the oppisite of your belief (1)
+incentive1 = 0
+#the incentive of the second agent do you play after your belief (0) or do you choose the oppisite of your belief (1)
+incentive2 = 0
+
+#make the agents play 100 times and plot it (included)
+times = 100
+ntrials = 120
+agg = rw_vs_rw_times(times = times,
+         ntrials = ntrials,
+         alpha1_l = alpha1_l,
+         alpha1_w = alpha1_w,
+         alpha2_l = alpha2_l,
+         alpha2_w = alpha2_w,
+         bias1 = bias1,
+         bias2 = bias2,
+         incentive1 = incentive1,
+         incentive2 = incentive2)
+
+
+plot_agg(agg)
+
+################
+#Plot2 (vs win stay lose shift)
+################
+
+#different parameter settings for the game and agents:
+#ntrials the number of times the agents play the game
+ntrials = 120
+#alpha1_l is the learning rate for the first agent (matcher) when losing
+alpha1_l = 0.66
+#alpha1_l is the learning rate for the first agent (matcher) when winning
+alpha1_w = 0.33
+#alpha2_l is the learning rate for the first agent (non-matcher) when losing
+alpha2_l = 1
+#alpha1_l is the learning rate for the first agent (non-matcher) when winning
+alpha2_w = 1
+#bias1 is the bias of the first participant to answer 1. That is if it is 1 then agent 1 will choose 1 on the first trial, if 0.5 he picks at random
+bias1 = 0.5
+#bias 2 is what bias1 is for agent2
+bias2 = 0.5
+
+#the incentive of the first agent do you play after your belief (0) or do you choose the oppisite of your belief (1)
+incentive1 = 0
+#the incentive of the second agent do you play after your belief (0) or do you choose the oppisite of your belief (1)
+incentive2 = 0
+
+
+#make the agents play 100 times and plot it (included)
+times = 100
+ntrials = 120
+agg = rw_vs_rw_times(times = times,
+         ntrials = ntrials,
+         alpha1_l = alpha1_l,
+         alpha1_w = alpha1_w,
+         alpha2_l = alpha2_l,
+         alpha2_w = alpha2_w,
+         bias1 = bias1,
+         bias2 = bias2,
+         incentive1 = incentive1,
+         incentive2 = incentive2)
+
+
+plot_agg(agg)
+```
+
+
+
+```{r, strategy 2}
+#Plot3 (vs random bias)
+
+# set up ntrials to specify ow many trials to play 
+ntrials = 120 # when using the MixRLAgent, ntrails should be an even number
+# alpha1 is the learning rate for the first half trials of the MixRLAgent
+alpha1 = 0 # start with a random strategy
+# alpha2 is the learning rate for the second half trials of the MixRLAgent
+alpha2 = 1
+# alpha_w is the learning rate when RLAgent2 won on the previous trial
+alpha_w = 0
+# alpha_l is the learning rate when RLAgent2 lost on the previous trial
+alpha_l = 0
+# bias_self is the matcher's bias on the first trial
+bias_self = 0
+# bias_other is the opponent's (non-matcher's) bias on the first trial
+bias_other = 0.7
+
+
+nagents = 100
+
+# set up space for the data of 100 agents
+full_df = data.frame()
+for (n in 1:nagents){
+  
+  df = RL_vs_MIX(ntrials = ntrials,
+               alpha1 = alpha1,
+               alpha2 = alpha2,
+               alpha_w = alpha_w,
+               alpha_l = alpha_l,
+               bias_self = bias_self,
+               bias_other = bias_other)
+  
+  df = data.frame(df)
+  colnames(df) = c("rw1", "rw2", "feedback_rw1","feedback_rw2")
+  cumm = plot_cumwin(df)  
+  df = cumm$data
+  df$trial = 1:ntrials
+
+  # append the df of each agent to the full_df
+  full_df = rbind(full_df, df)
+}
+# group 
+agg = full_df %>% 
+group_by(trials) %>% 
+summarize(n = n(),meanrw1 = mean(cumrw1),meanrw2 = mean(cumrw2), serw1 = sd(cumrw1)/sqrt(n),serw2 = sd(cumrw2)/sqrt(n))
+
+plot_agg(agg)
+
+
+
+################
+#Plot4 (vs win stay lose shift)
+################
+
+
+
+# set up ntrials to specify ow many trials to play 
+ntrials = 120 # when using the MixRLAgent, ntrails should be an even number
+# alpha1 is the learning rate for the first half trials of the MixRLAgent
+alpha1 = 0 # start with a random strategy
+# alpha2 is the learning rate for the second half trials of the MixRLAgent
+alpha2 = 1
+# alpha_w is the learning rate when RLAgent2 won on the previous trial
+alpha_w = 1
+# alpha_l is the learning rate when RLAgent2 lost on the previous trial
+alpha_l = 1
+# bias_self is the matcher's bias on the first trial
+bias_self = 0
+# bias_other is the opponent's (non-matcher's) bias on the first trial
+bias_other = 0.5
+
+
+nagents = 100
+
+# set up space for the data of 100 agents
+full_df = data.frame()
+for (n in 1:nagents){
+  
+  df = RL_vs_MIX(ntrials = ntrials,
+               alpha1 = alpha1,
+               alpha2 = alpha2,
+               alpha_w = alpha_w,
+               alpha_l = alpha_l,
+               bias_self = bias_self,
+               bias_other = bias_other)
+  
+  df = data.frame(df)
+  colnames(df) = c("rw1", "rw2", "feedback_rw1","feedback_rw2")
+  cumm = plot_cumwin(df)  
+  df = cumm$data
+  df$trial = 1:ntrials
+
+  # append the df of each agent to the full_df
+  full_df = rbind(full_df, df)
+}
+# group 
+agg = full_df %>% 
+group_by(trials) %>% 
+summarize(n = n(),meanrw1 = mean(cumrw1),meanrw2 = mean(cumrw2), serw1 = sd(cumrw1)/sqrt(n),serw2 = sd(cumrw2)/sqrt(n))
+
+plot_agg(agg)
+
+
+
+```
+
+
+
+```{r, plot 5}
+#strategy 1 versus strategy 2:
+
+
+# set up ntrials to specify ow many trials to play 
+ntrials = 120 # when using the MixRLAgent, ntrails should be an even number
+# alpha1 is the learning rate for the first half trials of the MixRLAgent
+alpha1 = 0 # start with a random strategy
+# alpha2 is the learning rate for the second half trials of the MixRLAgent
+alpha2 = 1
+# alpha_w is the learning rate when RLAgent2 won on the previous trial
+alpha_w = 0.33
+# alpha_l is the learning rate when RLAgent2 lost on the previous trial
+alpha_l = 0.66
+# bias_self is the matcher's bias on the first trial
+bias_self = 0
+# bias_other is the opponent's (non-matcher's) bias on the first trial
+bias_other = 0.5
+
+
+nagents = 100
+
+# set up space for the data of 100 agents
+full_df = data.frame()
+for (n in 1:nagents){
+  
+  df = RL_vs_MIX(ntrials = ntrials,
+               alpha1 = alpha1,
+               alpha2 = alpha2,
+               alpha_w = alpha_w,
+               alpha_l = alpha_l,
+               bias_self = bias_self,
+               bias_other = bias_other)
+  
+  df = data.frame(df)
+  colnames(df) = c("rw1", "rw2", "feedback_rw1","feedback_rw2")
+  cumm = plot_cumwin(df)  
+  df = cumm$data
+  df$trial = 1:ntrials
+
+  # append the df of each agent to the full_df
+  full_df = rbind(full_df, df)
+}
+# group 
+agg = full_df %>% 
+group_by(trials) %>% 
+summarize(n = n(),meanrw1 = mean(cumrw1),meanrw2 = mean(cumrw2), serw1 = sd(cumrw1)/sqrt(n),serw2 = sd(cumrw2)/sqrt(n))
+
+plot_agg(agg)
+
+
+
+```
+

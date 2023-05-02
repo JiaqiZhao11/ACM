@@ -1,0 +1,129 @@
+---
+title: "Assignment3"
+author: "Jiaqi"
+date: "2023-04-20"
+output: html_document
+---
+
+```{r}
+# load packages
+pacman::p_load(
+  tidyverse,
+  brms,
+  cmdstanr,
+  patchwork,
+  here,
+  bbmle,
+  extraDistr,
+  readr,
+  dplyr
+)
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+source(here::here("Advanced-cog", "assignment3", "sc_agents.R"))
+
+ntrials = 200
+bias = 0.5
+p_1 = 3
+p_2 = 3
+
+df = socialconform_f(ntrials, bias, p_1, p_2)
+df = data.frame(df)
+hist(df$first_rating)
+
+```
+
+```{r}
+ggplot(df, aes(Source1, outcome, color = Source2, group = Source2)) +
+  geom_line() +
+  theme_bw()
+```
+```{r}
+data1 = list(N = nrow(df), Source1 = df$Source1, Source2 = df$Source2, second = df$second)
+#export PATH = C:/Users/Zhaoj/Documents/.cmdstan/cmdstan-2.32.0/stan/lib/stan_math/lib/tbb:$PATH
+mod = cmdstan_model(here::here("Advanced-cog", "assignment3", "simple_Bayes.stan"))
+fit = mod$sample(data = data1)
+
+
+```
+```{r}
+mod_simpleBayes = cmdstan_model(here::here("Advanced-cog", "assignment3", "simple_Bayes.stan"), cpp_options = list(stan_threads = TRUE), stanc_options = list("O1"))
+samples_simple = mod_simpleBayes$sample(
+  data = data1,
+  #fixed_param = TRUE,
+  seed = 123,
+  chains = 1,
+  parallel_chains = 1,
+  threads_per_chain = 1,
+  iter_warmup = 1500,
+  iter_sampling = 3000,
+  refresh = 500
+)
+```
+
+
+```{r}
+fit = rstan::stan(file = here::here("Advanced-cog","assignment3", "simple_Bayes.stan"), data = data1)
+
+```
+```{r}
+df_s <- read_csv(here::here("assignment3", "Simonsen_clean.csv"))
+
+subIDs <- unique(df_s$ID)
+nsubs <- length(subIDs)
+trials = sum(df_s$ID == 201)
+for (s in 1:nsubs) {
+  dff = df_s %>% filter(ID %in% unique(df_s$ID)[s])
+  data_s = list(N = trials, Source1 = dff$FirstRating / 9, Source2 = dff$GroupRating / 9, second = dff$SecondRating / 9)
+
+  fit_s = rstan::stan(file = here::here("assignment3", "simple_Bayes.stan"), data = data_s)
+  
+}
+
+
+```
+
+
+```{r}
+# Generate a sequence of numbers from a normal distribution
+n <- 200
+mean <- 0.5
+std_dev <- 0.5
+sequence <- rnorm(n, mean, std_dev) * 9
+
+
+# Create a histogram of the generated sequence
+p <- ggplot(data.frame(x = sequence), aes(x = x)) +
+  geom_histogram(binwidth = 0.1, fill = "lightblue", color = "black") +
+  labs(title = "Histogram of Sampling from Normal Distribution",
+       x = "Value", y = "Frequency")
+print(p)
+```
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
