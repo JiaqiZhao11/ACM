@@ -27,11 +27,11 @@ pacman::p_load(
 
 
 ```{r}
-source(here::here("Advanced-cog", "assignment3", "sc_agents.R"))
+source(here::here("JiaqiZhao#1783", "ACM", "assignment3", "sc_agents.R"))
 
 ntrials = 200
 bias = 0.5
-p_1 = 3
+p_1 = 6
 p_2 = 3
 
 df = socialconform_f(ntrials, bias, p_1, p_2)
@@ -48,18 +48,18 @@ ggplot(df, aes(Source1, outcome, color = Source2, group = Source2)) +
 ```{r}
 data1 = list(N = nrow(df), Source1 = df$Source1, Source2 = df$Source2, second = df$second)
 #export PATH = C:/Users/Zhaoj/Documents/.cmdstan/cmdstan-2.32.0/stan/lib/stan_math/lib/tbb:$PATH
-mod = cmdstan_model(here::here("Advanced-cog", "assignment3", "simple_Bayes.stan"))
+mod = cmdstan_model(here::here("JiaqiZhao#1783", "ACM", "assignment3", "simple_Bayes.stan"))
 fit = mod$sample(data = data1)
 
 
 ```
 ```{r}
-mod_simpleBayes = cmdstan_model(here::here("Advanced-cog", "assignment3", "simple_Bayes.stan"), cpp_options = list(stan_threads = TRUE), stanc_options = list("O1"))
+mod_simpleBayes = cmdstan_model(here::here("JiaqiZhao#1783", "ACM", "assignment3", "simple_Bayes.stan"), cpp_options = list(stan_threads = TRUE), stanc_options = list("O1"))
 samples_simple = mod_simpleBayes$sample(
   data = data1,
   #fixed_param = TRUE,
   seed = 123,
-  chains = 1,
+  chains = 4,
   parallel_chains = 1,
   threads_per_chain = 1,
   iter_warmup = 1500,
@@ -70,7 +70,7 @@ samples_simple = mod_simpleBayes$sample(
 
 
 ```{r}
-fit = rstan::stan(file = here::here("Advanced-cog","assignment3", "simple_Bayes.stan"), data = data1)
+fit = rstan::stan(file = here::here("JiaqiZhao#1783", "ACM","assignment3", "simple_Bayes.stan"), data = data1)
 
 ```
 ```{r}

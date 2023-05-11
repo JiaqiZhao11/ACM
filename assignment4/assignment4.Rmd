@@ -17,17 +17,20 @@ pacman::p_load(
   readr,
   dplyr,
   furrr,
-  purrr
+  purrr,
+  ggtext,
+  ggdist,
+  ggplot2
 )
 ```
 
 ```{r}
-data = read_csv(here::here("ACM", "assignment4", "AlienData.txt"))
+#data = read_csv(here::here("ACM", "assignment4", "AlienData.txt"))
 ```
 
 
 ```{r}
-source(here::here("ACM", "assignment4", "scripts.R"))
+source(here::here("assignment4", "scripts.R"))
 stimuli = rbind(stimulus_f(), stimulus_f(), stimulus_f())
 obs = stimuli[1:5]
 cat_one = stimuli[,6]
@@ -44,7 +47,7 @@ print(response)
 
 
 ```{r}
-source(here::here("ACM", "assignment4", "scripts.R"))
+source(here::here("assignment4", "scripts.R"))
 # function for simulation responses
 simulate_responses <- function(agent, w, c) {
     
@@ -101,8 +104,8 @@ simulated_responses <- future_pmap_dfr(param_df,
     .progress = TRUE
 )
 
-
 ```
+
 ```{r}
 p3 <- simulated_responses %>%
   mutate(w = as.factor(w)) %>%
@@ -128,6 +131,63 @@ p5 <- simulated_responses %>%
   geom_smooth() +
   theme_bw() +
   facet_wrap(w ~ .)
+```
+
+```{r}
+
+```
+
+
+```{r}
+file <- file.path(here::here("ACM", "assignment4", "gcm.stan"))
+mod_GCM <- cmdstan_model(file, cpp_options = list(stan_threads = TRUE),
+                     stanc_options = list("O1"))
+```
+
+```{r}
+d <- simulated_responses %>% subset(
+  c == "1.1" & w == "equal"
+)
+
+gcm_data <- list(
+  ntrials = nrow(d),
+  nfeatures = 5,
+  cat_one = d$danger,
+  y = d$sim_response,
+  obs = as.matrix(d[, 1:5]),
+  b = 0.5,
+  w_prior_values = c(1,1,1,1,1),
+  c_prior_values = c(0, 1)
+)
+
+samples_gcm <- mod_GCM$sample(
+  data = gcm_data,
+  seed = 123,
+  chains = 4,
+  parallel_chains = 4,
+  threads_per_chain = 4,
+  iter_warmup = 1000,
+  iter_sampling = 1000,
+  refresh = 100
+)
+
+```
+
+```{r}
+samples_gcm$cmdstan_diagnose()
+
+```
+```{r}
+sum = samples_gcm$summary()
+```
+
+```{r}
+draws_df <- as_draws_df(samples_gcm$draws())
+ggplot(draws_df) +
+  geom_histogram(aes(c), alpha = 0.6, fill = "lightblue") +
+  geom_histogram(aes(c_prior), alpha = 0.6, fill = "pink") +
+  geom_vline(xintercept = d$c[1]) +
+  theme_bw()
 ```
 
 ```{r}
