@@ -15,24 +15,140 @@ pacman::p_load(
   bbmle,
   extraDistr,
   readr,
-  dplyr
+  dplyr,
+  furrr,
+  purrr
 )
 ```
 
 ```{r}
-df = read_csv(here::here("Advanced-cog", "assignment4", "AlienData.txt"))
+data = read_csv(here::here("ACM", "assignment4", "AlienData.txt"))
 ```
 
 
 ```{r}
-source(here::here("Advanced-cog", "assignment4", "scripts.R"))
+source(here::here("ACM", "assignment4", "scripts.R"))
+stimuli = rbind(stimulus_f(), stimulus_f(), stimulus_f())
+obs = stimuli[1:5]
+cat_one = stimuli[,6]
+w = rdirichlet(1,c(100,100,100,100,100))
+c = 1
 
-stimuli = rbind(stimulus_f()[1:5], stimulus_f()[1:5], stimulus_f()[1:5])
+response = gcm(w = w, c =c, cat_one = cat_one, obs = obs)
+print(response)
+
+
+```
 
 
 
 
+```{r}
+source(here::here("ACM", "assignment4", "scripts.R"))
+# function for simulation responses
+simulate_responses <- function(agent, w, c) {
+    
+    stimuli = rbind(stimulus_f(), stimulus_f(), stimulus_f())
+    obs = stimuli[,1:5]
+    category = stimuli[,6]
 
+    
+    if (w == "equal") {
+        weight = rdirichlet(1,c(100,100,100,100,100))
+    } else if (w == "right") {
+        weight = rdirichlet(1,c(50,50,500,500,50))
+    } else if (w == "wrong") {
+        weight = rdirichlet(1,c(500,500,50,50,500))
+    }
+
+    # simulate responses
+    responses <- gcm(
+        weight,
+        c,
+        obs,
+        category
+    )
+    
+    tmp_simulated_responses <- stimuli %>%
+        mutate(
+            trial = seq(nrow(.)), # take the row of the stimuli
+            sim_response = responses,
+            correct = ifelse(category == sim_response, 1, 0),
+            performance = cumsum(correct) / seq_along(correct),
+            c = c,
+            w = w,
+            agent = agent
+        )
+
+    return(tmp_simulated_responses)
+}
+
+
+# simulate responses
+plan(multisession, workers = availableCores())
+
+param_df <- dplyr::tibble(
+    expand_grid(
+        agent = 1:10,
+        c = seq(.1, 2, 0.2),
+        w = c("equal", "right", "wrong")
+    )
+)
+
+simulated_responses <- future_pmap_dfr(param_df,
+    simulate_responses,
+    .options = furrr_options(seed = TRUE),
+    .progress = TRUE
+)
+
+
+```
+```{r}
+p3 <- simulated_responses %>%
+  mutate(w = as.factor(w)) %>%
+  ggplot(aes(trial, performance, group = w, color = w)) +
+  geom_smooth() +
+  theme_bw() +
+  facet_wrap(c ~ .)
+
+p4 <- simulated_responses %>%
+  mutate(c = as.factor(c)) %>%
+  ggplot(aes(trial, performance, group = c, color = c)) +
+  geom_smooth() +
+  theme_bw() +
+  facet_wrap(w ~ .)
+
+p3 + p4
+```
+
+```{r}
+p5 <- simulated_responses %>%
+  mutate(c = as.factor(c)) %>%
+  ggplot(aes(st, performance, group = c, color = c)) +
+  geom_smooth() +
+  theme_bw() +
+  facet_wrap(w ~ .)
+```
+
+```{r}
+
+```
+
+
+```{r}
+# Let's assess similarity
+dd <- tibble(
+  expand_grid(
+    distance = c(0,.1,.2, .3,.4,.5,1,1.5,2,3,4,5,6), 
+    c = c(0.1, 0.2, 0.5, 0.7, 1, 1.5, 2, 3, 4, 5, 6))) %>% 
+  mutate(
+    similarity = similarity(distance, c)
+  )
+
+dd %>% mutate(c = factor(c)) %>%
+  ggplot() +
+  geom_line(aes(distance, similarity, group = c, color = c)) + 
+  theme_bw()
 ```
 
 
